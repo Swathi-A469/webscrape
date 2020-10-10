@@ -11,9 +11,19 @@ import (
 	"os"
 )
 
-func checkDomain(domain string) (err error) {
+//CheckDomain if the domain exists, write its content to a file else return error
+func CheckDomain(domain string) (err error) {
 	// Make HTTP request
-	response, err := http.Get(domain)
+	method := "GET"
+	client := &http.Client{}
+	req, err := http.NewRequest(method, domain, nil)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+	req.Header.Add("User-Agent", `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11`)
+	req.Header.Add("Accept", "*/*")
+	response, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -43,7 +53,8 @@ func checkDomain(domain string) (err error) {
 	return nil
 }
 
-func addFileToIpfs(filePath string) string {
+//AddFileToIpfs adds the specified file to IPFS and returns hash
+func AddFileToIpfs(filePath string) string {
 	url := "https://ipfs.infura.io:5001/api/v0/add"
 	method := "POST"
 	payload := &bytes.Buffer{}
@@ -81,7 +92,8 @@ func addFileToIpfs(filePath string) string {
 	return response["Hash"]
 }
 
-func getObjectFromIpfs(Hash string, filePath string) {
+//GetObjectFromIpfs get object from ipfs and writes to the specified file
+func GetObjectFromIpfs(Hash string, filePath string) {
 	fmt.Println(Hash)
 	url := "https://ipfs.infura.io:5001/api/v0/cat?arg="
 	url += Hash
