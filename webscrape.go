@@ -1,14 +1,12 @@
 package webscrape
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
+	shell "github.com/ipfs/go-ipfs-api"
 )
 
 //CheckDomain if the domain exists, write its content to a file else return error
@@ -54,82 +52,31 @@ func CheckDomain(domain string) (err error) {
 }
 
 //AddFileToIpfs adds the specified file to IPFS and returns hash
-func AddFileToIpfs(filePath string) string {
-	url := "https://ipfs.infura.io:5001/api/v0/add"
-	method := "POST"
-	payload := &bytes.Buffer{}
-	writer := multipart.NewWriter(payload)
-	file, errFile2 := os.Open(filePath)
+func AddFileToIpfs(filePath string) (string, error)  {	
+	sh := shell.NewShell("https://ipfs.infura.io:5001")
+	// Create io reader from a local file
+	file, err := os.Open(filePath)
 	defer file.Close()
-	part2,
-		errFile2 := writer.CreateFormFile("file", filePath)
-	_, errFile2 = io.Copy(part2, file)
-	if errFile2 != nil {
-
-		fmt.Println(errFile2)
-	}
-	err := writer.Close()
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	client := &http.Client{}
-	req, err := http.NewRequest(method, url, payload)
-
+	
+	//Uploads file to ipfs and returns metahash
+	hash, err := sh.Add(file)
 	if err != nil {
 		fmt.Println(err)
 	}
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	res, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer res.Body.Close()
-
-	var response map[string]string
-	json.NewDecoder(res.Body).Decode(&response)
-	fmt.Println(response)
-	return response["Hash"]
+	return hash, err
 }
 
 //GetObjectFromIpfs get object from ipfs and writes to the specified file
-func GetObjectFromIpfs(Hash string, filePath string) {
-	fmt.Println(Hash)
-	url := "https://ipfs.infura.io:5001/api/v0/cat?arg="
-	url += Hash
-	method := "POST"
+func GetObjectFromIpfs(Hash string, filePath string) error {
 
-	payload := &bytes.Buffer{}
-	writer := multipart.NewWriter(payload)
-	err := writer.Close()
+	sh := shell.NewShell("https://ipfs.infura.io:5001")
+
+	err := sh.Get(Hash, filePath)
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	client := &http.Client{}
-	req, err := http.NewRequest(method, url, payload)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	res, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer res.Body.Close()
-
-	// Create output file
-	outFile, err := os.Create(filePath)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer outFile.Close()
-
-	// Copy data from the response to standard output
-	n, err := io.Copy(outFile, res.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println("Number of bytes copied :", n)
+	return err
 }
