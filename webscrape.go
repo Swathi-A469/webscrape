@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	shell "github.com/ipfs/go-ipfs-api"
+
+	ipfsGateway "github.com/ipfs/go-ipfs-api"
 )
 
 //CheckDomain if the domain exists, write its content to a file else return error
@@ -52,17 +53,17 @@ func CheckDomain(domain string) (err error) {
 }
 
 //AddFileToIpfs adds the specified file to IPFS and returns hash
-func AddFileToIpfs(filePath string) (string, error)  {	
-	sh := shell.NewShell("https://ipfs.infura.io:5001")
+func AddFileToIpfs(filePath string) (string, error) {
+	ig := ipfsGateway.NewShell("https://ipfs.infura.io:5001")
 	// Create io reader from a local file
 	file, err := os.Open(filePath)
 	defer file.Close()
 	if err != nil {
 		fmt.Println(err)
 	}
-	
+
 	//Uploads file to ipfs and returns metahash
-	hash, err := sh.Add(file)
+	hash, err := ig.Add(file)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -72,9 +73,9 @@ func AddFileToIpfs(filePath string) (string, error)  {
 //GetObjectFromIpfs get object from ipfs and writes to the specified file
 func GetObjectFromIpfs(Hash string, filePath string) error {
 
-	sh := shell.NewShell("https://ipfs.infura.io:5001")
+	ig := ipfsGateway.NewShell("https://ipfs.infura.io:5001")
 
-	err := sh.Get(Hash, filePath)
+	err := ig.Get(Hash, filePath)
 	if err != nil {
 		fmt.Println(err)
 	}
