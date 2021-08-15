@@ -1,3 +1,3 @@
-# webscrape
+# WebScrape Bot
 
-Scrape Website and add it's content on IPFS.
+Scrape Websites based on the reviews submitted and add it's content on IPFS.

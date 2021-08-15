@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math"
+	"net/url"
 
 	ws "github.com/NetSepio/webscrape"
 	"github.com/chromedp/cdproto/emulation"
@@ -15,10 +16,17 @@ import (
 
 func main() {
 
-	ws.CheckDomain("https://www.github.com")
+	websiteURL := "https://github.com/NetSepio"
+	domain, err := url.Parse(websiteURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	htmlFile := domain.Host
 
-	hash, _ := ws.AddFileToIpfs("github.txt")
-	fmt.Printf(hash)
+	ws.CheckDomain(websiteURL)
+
+	hash, _ := ws.AddFileToIpfs(htmlFile)
+	fmt.Printf("https://ipfs.infura.io/ipfs/" + hash)
 
 	ws.GetObjectFromIpfs(hash, "output.txt")
 
@@ -29,7 +37,7 @@ func main() {
 	// capture screenshot of an element
 	var buf []byte
 	// capture entire browser viewport, returning png with quality=90
-	if err := chromedp.Run(ctx, fullScreenshot(`https://github.com/`, 90, &buf)); err != nil {
+	if err := chromedp.Run(ctx, fullScreenshot(websiteURL, 90, &buf)); err != nil {
 		log.Fatal(err)
 	}
 	if err := ioutil.WriteFile("fullScreenshot.png", buf, 0644); err != nil {
@@ -43,7 +51,7 @@ func fullScreenshot(urlstr string, quality int64, res *[]byte) chromedp.Tasks {
 		chromedp.Navigate(urlstr),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			// get layout metrics
-			_, _, contentSize, err := page.GetLayoutMetrics().Do(ctx)
+			_, _, contentSize, _, _, _, err := page.GetLayoutMetrics().Do(ctx)
 			if err != nil {
 				return err
 			}

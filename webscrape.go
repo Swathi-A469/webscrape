@@ -10,7 +10,7 @@ import (
 	ipfsGateway "github.com/ipfs/go-ipfs-api"
 )
 
-//CheckDomain if the domain exists, write its content to a file else return error
+// CheckDomain if the domain exists, write its content to a file else return error
 func CheckDomain(domain string) (err error) {
 	// Make HTTP request
 	method := "GET"
